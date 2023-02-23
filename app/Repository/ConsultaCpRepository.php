@@ -22,13 +22,17 @@ class ConsultaCpRepository implements ConsultaCpRepositoryInterface
     }
 
     // Save a Vacant in Template of CRM
-    public function getZipCodes($data)
+    public function getZipCodes($dataZip)
     {
-        if (Cache::has('zipcodes')) {
-            $data = Cache::get('zipcodes');
+        $key = 'zipcodes' . $dataZip;
+        //Cacheamos en la cadena zipcodes+zipcode y
+        //utilizamos un file para cache, tambien se
+        //puede utiliza redis o memcache
+        if (Cache::has($key)) {
+            $data = Cache::get($key);
         } else {
-            $data = ConsultaCp::where("d_codigo", $data)->get();
-            Cache::put('zipcodes', $data);
+            $data = ConsultaCp::where("d_codigo", $dataZip)->get();
+            Cache::put($key, $data);
         }
 
 

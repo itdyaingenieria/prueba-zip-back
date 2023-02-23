@@ -34,6 +34,14 @@ RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
+# Crate permissions for laravel
+RUN mkdir -p /var/www/storage/framework/{sessions,views,cache} \
+    && mkdir -p /var/www/bootstrap/cache \
+    && mkdir -p /var/www/storage/logs \
+    && addgroup -g ${PHP_UID} www \
+    && adduser -H -D -u ${PHP_GID} -G www www \
+    && chown -R www:www /var/www
+
 #RUN composer install --no-scripts --no-dev -o
 
 # Set working directory
