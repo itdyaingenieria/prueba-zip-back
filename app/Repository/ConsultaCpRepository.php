@@ -82,6 +82,6 @@ class ConsultaCpRepository implements ConsultaCpRepositoryInterface
         return response()->json([
             'message' => 'Error de Consulta.',
             'error' => 'El zipCode, ' . $dataZip . ' No existe.'
-        ], 500);
+        ], 404);
     }
 }
