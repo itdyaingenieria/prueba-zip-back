@@ -16,7 +16,7 @@ El tiempo de respuesta promedio debe ser menor a 300 ms, pero entre menor sea, m
 
 ## ¿Como se abordo el problema?
 
-Para solucionar el reto se utiliza, el siguiente stack:
+Para solucionar el reto se utiliza, el siguiente stack que se encuentra dockerizado:
 - Laravel versión 10.
 - Base de Datos Postgresql 13.10
     (En la base de datos se debe considerar el cambio 'charset' => 'latin1', en el archivo config/database.php de pgsql, para no tener inconvenientes con los caracteres).
@@ -40,36 +40,57 @@ pero a mayor cantidad de datos se recomienda utilizar logstash de elasticsearch.
 * 5) Se dockerizo la aplicacion API
 
 #Comandos Utilizados en despliegue en Google Cloud
+Consideraciones:
+Tener instalado docker y docker compose
+
+1.) Ejecutar el comando para levantar el proyecto
 ```
-comandos para docker working
-
 docker-compose up
-docekr-compose down
+```
+2.) Instalar las dependdencias en el contenedor
+```
+- pasamos el usuario a root con comando
+        docker exec -u 0 -ti  iddeimagendocher /bin/bash
+- ejecutamos 
+        composer install
+```
 
-docker ps -a
-docker system prune -a
+3.) Habilitamos los permisos para laravel
+luego habilitamos los permisos de laravel
+```
+chmod 777 -R /var/www/storage/logs
+chmod 777 -R /var/www/storage/framework
+```
 
-docker volume ls
+4.) generamos la migracion de tablas
+```
+sudo docker-compose exec -u  0 app php artisan migrate
+```
+5.)luego realizamos la carga ETL con el seeder
+```
+docker-compose exec app php artisan db:seed --class=CargaCsvSeeder
+```
 
-docker-compose exec app php artisan config:cache
+## Consumo del EndPoint
+```
+http://35.203.123.17:8001/api/zip-codes/78575
+```
+
+## Varios comandos para trabajo en docker 
+```
+docker-compose down -> Bajamos las imagenes
+
+docker ps -a -> Muestra los contenedores detenidos
+docker system prune -a -> Eliminar los contenedores detenidos
+
+docker volume ls -> Lista los volumenes de docker
+
+docker-compose exec app php artisan config:cache 
 
 docker-compose exec app bash
 
 docker volume rm prueba-zip-back_dbdata
 
-pasamos el usuario a root con comando
-docker exec -u 0 -ti  iddeimagendocher /bin/bash
-ejecutamos composer install
-
-luego habilitamos los permisos de laravel
-chmod 777 -R /var/www/storage/logs
-chmod 777 -R /var/www/storage/framework
-
-generamos la migracion de tablas
-sudo docker-compose exec -u  0 app php artisan migrate
-
-luego realizamos la carga ETL con el seeder
-docker-compose exec app php artisan db:seed --class=CargaCsvSeeder
 ```
 ## Conclusión
 
