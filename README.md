@@ -28,7 +28,7 @@ https://www.correosdemexico.gob.mx/SSLServicios/ConsultaCP/CodigoPostal_Exportar
 En el proceso de ETL se contempla dos opciones:
     a.) El uso de seeder a traves del archivo CargaCsvSeeder.php, con el cual se realiza la inyeccion de un archivo csv separado por ; y que previamente se
         ha formateado utilizando el archivo txt. Proceso que tiene un buen performance.
-    b.) Se realiza uso de stack logstash de elastic, para realizar la carga del archivo csv a postgresql
+    b.) Existe un metodo que hace uso de stack logstash de elastic, para realizar la carga del archivo csv a postgresql.
 
 Este proceso presenta grado de dificultad debido al tratamiento de grandes cantidades de datos, al utilizar las dos opciones, los resultados son buenos,
 pero a mayor cantidad de datos se recomienda utilizar logstash de elasticsearch.
@@ -39,7 +39,38 @@ pero a mayor cantidad de datos se recomienda utilizar logstash de elasticsearch.
 * 4) Se habilito la ruta replicando el endpoint /api/zip-codes/{zip_code}.
 * 5) Se dockerizo la aplicacion API
 
+#Comandos Utilizados en despliegue en Google Cloud
+```
+comandos para docker working
 
+docker-compose up
+docekr-compose down
+
+docker ps -a
+docker system prune -a
+
+docker volume ls
+
+docker-compose exec app php artisan config:cache
+
+docker-compose exec app bash
+
+docker volume rm prueba-zip-back_dbdata
+
+pasamos el usuario a root con comando
+docker exec -u 0 -ti  iddeimagendocher /bin/bash
+ejecutamos composer install
+
+luego habilitamos los permisos de laravel
+chmod 777 -R /var/www/storage/logs
+chmod 777 -R /var/www/storage/framework
+
+generamos la migracion de tablas
+sudo docker-compose exec -u  0 app php artisan migrate
+
+luego realizamos la carga ETL con el seeder
+docker-compose exec app php artisan db:seed --class=CargaCsvSeeder
+```
 ## Conclusión
 
 1. El manejo de grandes cantidades de volumenes de informacion, tiene muchas formas de ser trabajadas, laravel 10 y el uso del seeder genera buen rendimiento de carga.
