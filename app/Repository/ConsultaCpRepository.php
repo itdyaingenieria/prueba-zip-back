@@ -7,6 +7,7 @@ use App\Interfaces\ConsultaCpRepositoryInterface;
 use App\Http\Traits\ZipCodeTraits;
 use App\Models\ConsultaCp;
 use stdClass;
+use Illuminate\Support\Facades\Cache;
 
 class ConsultaCpRepository implements ConsultaCpRepositoryInterface
 {
@@ -23,7 +24,13 @@ class ConsultaCpRepository implements ConsultaCpRepositoryInterface
     // Save a Vacant in Template of CRM
     public function getZipCodes($data)
     {
-        $data = ConsultaCp::where("d_codigo", $data)->get();
+        if (Cache::has('zipcodes')) {
+            $data = Cache::get('zipcodes');
+        } else {
+            $data = ConsultaCp::where("d_codigo", $data)->get();
+            Cache::put('zipcodes', $data);
+        }
+
 
         if (isset($data)) {
 
