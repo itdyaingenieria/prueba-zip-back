@@ -1,0 +1,54 @@
+version: "3.9"
+#itdyaingenieria 2023 Ing Diego Yama Andrade
+services:
+    app:
+        image: "laratest/app:${TAG:-latest}"
+        build:
+            args:
+                user: testusr
+                uid: 1000
+            context: ./
+            dockerfile: Dockerfile
+        container_name: dfya-back-app
+        restart: unless-stopped
+        working_dir: /var/www/
+        volumes:
+            - ./:/var/www
+        networks:
+            - net-dfya
+
+    web:
+        image: nginx:1.23.3
+        container_name: dfya-back-nginx
+        restart: unless-stopped
+        ports:
+            - ${SERVER_PORT:-8001}:8001
+        volumes:
+            - ./:/var/www
+            - ./docker-compose/nginx:/etc/nginx/conf.d/
+        networks:
+            - net-dfya
+
+    db:
+        image: postgres:13.10-bullseye
+        container_name: dfya-back-db
+        restart: unless-stopped
+        ports:
+            - ${DB_PORT:-5432}:5432
+        volumes:
+            - dbdata:/var/lib/postgresql/data
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER:-postgres}
+            - POSTGRES_DB=${POSTGRES_DB:-pg_backbone}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-Diego*123}
+            - PGDATA=/var/lib/postgresql/data
+            - POSTGRES_HOST=localhost
+        networks:
+            - net-dfya
+networks:
+    net-dfya:
+        driver: bridge
+
+volumes:
+    dbdata:
+        driver: local
