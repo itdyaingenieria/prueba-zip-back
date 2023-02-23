@@ -4,10 +4,7 @@ services:
     app:
         image: "laratest/app:${TAG:-latest}"
         build:
-            args:
-                user: testusr
-                uid: 1000
-            context: ./
+            context: .
             dockerfile: Dockerfile
         container_name: dfya-back-app
         restart: unless-stopped

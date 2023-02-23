@@ -1,46 +1,60 @@
-FROM php:8.1.16-fpm-bullseye
+FROM php:8.1.16-fpm
 
 LABEL maintainer="Diego Fernando Yama Andrade"
 
-# Arguments defined in docker-compose.yml
-ARG user
-ARG uid
+# Copy composer.lock and composer.json into the working directory
+COPY composer.json /var/www/
 
-# Install system dependencies
+# Set working directory
+WORKDIR /var/www/
+
+# Install dependencies for the operating system software
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
+    build-essential \
+    libfreetype6-dev \
+    locales \
     zip \
+    vim \
+    libzip-dev \
     unzip \
+    git \
+    libonig-dev \
+    curl \
     libpq-dev
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd
+# Install extensions for php
+RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring zip exif pcntl
 
-# Get latest Composer
-#COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN php -r "readfile('https://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer
-COPY . .
-RUN composer install
+# Install composer (php package manager)
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Create system user to run Composer and Artisan Commands
-RUN useradd -G www-data,root -u $uid -d /home/$user $user
-RUN mkdir -p /home/$user/.composer && \
-    chown -R $user:$user /home/$user
+# Instalamos dependendencias de composer
+RUN composer install --no-ansi --no-dev --no-interaction --no-progress --optimize-autoloader --no-scripts
 
-#RUN composer install --no-scripts --no-dev -o
+# Add user for laravel application
+RUN groupadd -g 1000 www
+RUN useradd -u 1000 -ms /bin/bash -g www www
+
+# Copy existing application directory contents to the working directory
+COPY . /var/www
+COPY .env.example /var/www/.env
+
+# Copy existing application directory permissions
+COPY --chown=www:www . /var/www
+
+# Change current user to www
+USER www
+
 # Assign permissions of the working directory to the www-data user
-RUN mkdir -p /var/www/bootstrap/cache \
-    && mkdir -p /var/www/storage/logs \
-    && chown -R $user:$user /var/www
+RUN php artisan config:cache && \
+    php artisan route:cache && \
+    chmod 777 -R /var/www/storage/ && \
+    chmod 777 -R /var/www/bootstrap/ && \
+    chmod 777 -R /var/www/storage/logs
 
-# Set working directory
-WORKDIR /var/www
-
-USER $user
+# Expose port 9000 and start php-fpm server (for FastCGI Process Manager)
+EXPOSE 9000
+CMD ["php-fpm"]
