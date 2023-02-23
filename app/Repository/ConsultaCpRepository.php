@@ -35,8 +35,7 @@ class ConsultaCpRepository implements ConsultaCpRepositoryInterface
             Cache::put($key, $data);
         }
 
-
-        if (isset($data)) {
+        if (!$data->isEmpty()) {
 
             $info = $data->first();
             $dEstado = $this->eliminarAcentos($info->d_estado);
@@ -80,6 +79,9 @@ class ConsultaCpRepository implements ConsultaCpRepositoryInterface
             return response()->json($result);
         }
 
-        return response()->json($data);
+        return response()->json([
+            'message' => 'Error de Consulta.',
+            'error' => 'El zipCode, ' . $dataZip . ' No existe.'
+        ], 500);
     }
 }
